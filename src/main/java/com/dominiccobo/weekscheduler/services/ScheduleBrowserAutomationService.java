@@ -1,10 +1,10 @@
 package com.dominiccobo.weekscheduler.services;
 
+import com.dominiccobo.weekscheduler.domain.AcademicYear;
 import com.dominiccobo.weekscheduler.domain.UserScheduleDetail;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,16 +17,19 @@ import java.util.Map;
  */
 public class ScheduleBrowserAutomationService {
 
-    // TODO: automate URLs in line with the current year.
-    static final String SCHEDULE_LOGIN_URL = "https://teaching.brunel.ac.uk/SWS-1718/login.aspx";
-    static final String SCHEDULE_DEFAULT_URL = "https://teaching.brunel.ac.uk/SWS-1718/default.aspx";
-    static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+    private static final String BASE_URL = "https://teaching.brunel.ac.uk";
+    private static final String SCHEDULE_LOGIN_PATH = "/login.aspx";
+    private static final String SCHEDULE_DEFAULT_PATH = "/default.aspx";
+    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
             "(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36";
+
 
     /**
      * Current cookies generated when navigating to a page, required for persisting session.
      */
     private java.util.Map<String, String> currentCookies = new HashMap<String, String>();
+
+    private AcademicYear academicYear;
 
     /**
      * Contains the details required to browse to the timetable.
@@ -41,8 +44,10 @@ public class ScheduleBrowserAutomationService {
     /**
      * Constructor specifying only required field for service to work.
      * @param userScheduleDetail the set of details required for the automation process.
+     * @param academicYear the academic year of the timetable to access.
      */
-    public ScheduleBrowserAutomationService(UserScheduleDetail userScheduleDetail) {
+    public ScheduleBrowserAutomationService(UserScheduleDetail userScheduleDetail, AcademicYear academicYear) {
+        this.academicYear = academicYear;
         this.setUserScheduleDetail(userScheduleDetail);
         this.browse();
     }
@@ -57,7 +62,7 @@ public class ScheduleBrowserAutomationService {
 
             // retrieve DOM  so we can extract post back fields.
             res = Jsoup
-                    .connect(SCHEDULE_LOGIN_URL)
+                    .connect(buildUrl(SCHEDULE_LOGIN_PATH, academicYear))
                     .userAgent(USER_AGENT)
                     .method(Connection.Method.GET)
                     .execute();
@@ -73,7 +78,7 @@ public class ScheduleBrowserAutomationService {
 
             // submit post request with formulated data.
              res = Jsoup
-                     .connect(SCHEDULE_LOGIN_URL)
+                     .connect(buildUrl(SCHEDULE_LOGIN_PATH, academicYear))
                      .userAgent(USER_AGENT)
                      .data(loginData)
                      .method(Connection.Method.POST)
@@ -89,7 +94,7 @@ public class ScheduleBrowserAutomationService {
 
             // send data and change view
             res = Jsoup
-                    .connect(SCHEDULE_DEFAULT_URL)
+                    .connect(buildUrl(SCHEDULE_DEFAULT_PATH, academicYear))
                     .userAgent(USER_AGENT)
                     .data(timetableSelectionData)
                     .method(Connection.Method.POST)
@@ -104,7 +109,7 @@ public class ScheduleBrowserAutomationService {
             timetableDlTypeData = createPostBack(this.getDocument(), timetableDlTypeData);
 
             res = Jsoup
-                    .connect(SCHEDULE_DEFAULT_URL)
+                    .connect(buildUrl(SCHEDULE_DEFAULT_PATH, academicYear))
                     .userAgent(USER_AGENT)
                     .data(timetableDlTypeData)
                     .method(Connection.Method.POST)
@@ -125,7 +130,7 @@ public class ScheduleBrowserAutomationService {
             showTimetableData = createPostBack(this.getDocument(), showTimetableData);
 
             res = Jsoup
-                    .connect(SCHEDULE_DEFAULT_URL)
+                    .connect(buildUrl(SCHEDULE_DEFAULT_PATH, academicYear))
                     .userAgent(USER_AGENT)
                     .data(showTimetableData)
                     .followRedirects(true)
@@ -194,4 +199,13 @@ public class ScheduleBrowserAutomationService {
         this.document = document;
     }
 
+    /**
+     * Builds the URL to access the timetable fer a particular year.
+     * @param path the path o
+     * @param academicYear an object ({@link AcademicYear}) representing the current academic year.
+     * @return
+     */
+    private static String buildUrl(String path, AcademicYear academicYear) {
+        return String.format("%s/SWS-%s%s", BASE_URL, academicYear.asString(), path);
+    }
 }

@@ -1,5 +1,6 @@
 package com.dominiccobo.weekscheduler;
 
+import com.dominiccobo.weekscheduler.domain.AcademicYear;
 import com.dominiccobo.weekscheduler.domain.ScheduleEvent;
 import com.dominiccobo.weekscheduler.domain.UserScheduleDetail;
 import com.dominiccobo.weekscheduler.services.ICSBuilderService;
@@ -65,7 +66,8 @@ public class ApplicationEntryPoint {
 
         // automate the navigation to the timetable element
         ScheduleBrowserAutomationService browserAutomation = new ScheduleBrowserAutomationService(
-                userScheduleDetail
+                userScheduleDetail,
+                new AcademicYear(19, 20)
         );
 
         // parse all contents...
