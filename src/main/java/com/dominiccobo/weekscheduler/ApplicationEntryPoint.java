@@ -14,7 +14,7 @@ import com.dominiccobo.weekscheduler.services.ScheduleScraperService;
  */
 public class ApplicationEntryPoint {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
         UserScheduleDetail userScheduleDetail = new UserScheduleDetail();
 

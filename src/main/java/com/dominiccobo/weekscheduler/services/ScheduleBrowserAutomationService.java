@@ -5,6 +5,8 @@ import com.dominiccobo.weekscheduler.domain.UserScheduleDetail;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -46,7 +48,7 @@ public class ScheduleBrowserAutomationService {
      * @param userScheduleDetail the set of details required for the automation process.
      * @param academicYear the academic year of the timetable to access.
      */
-    public ScheduleBrowserAutomationService(UserScheduleDetail userScheduleDetail, AcademicYear academicYear) {
+    public ScheduleBrowserAutomationService(UserScheduleDetail userScheduleDetail, AcademicYear academicYear) throws Exception {
         this.academicYear = academicYear;
         this.setUserScheduleDetail(userScheduleDetail);
         this.browse();
@@ -55,95 +57,117 @@ public class ScheduleBrowserAutomationService {
     /**
      * Automates the browsing process to the timetable.
      */
-    private void browse()  {
+    private void browse() throws Exception{
 
         Connection.Response res = null;
-        try {
+        openLoginPage();
+        login();
+        navigateToTimetableSelection();
+        changeTypeOfReport();
+        openSelectedTimetable();
+    }
 
-            // retrieve DOM  so we can extract post back fields.
-            res = Jsoup
-                    .connect(buildUrl(SCHEDULE_LOGIN_PATH, academicYear))
-                    .userAgent(USER_AGENT)
-                    .method(Connection.Method.GET)
-                    .execute();
+    private void openSelectedTimetable() throws IOException {
+        Connection.Response res;
+        Map<String, String> showTimetableData = new HashMap<String, String>();
+        showTimetableData.put("tLinkType", "mystudentsettimetable");
+        showTimetableData.put("tUser", this.getUserScheduleDetail().getUsername());
+        showTimetableData.put("lbWeeks", this.getUserScheduleDetail().getWeekNumber());
+        showTimetableData.put("dlPeriod", "1-24");
+        showTimetableData.put("dlType", "TextSpreadsheet;swsurl;SWSCUST Object TextSpreadsheet");
+        showTimetableData.put("bGetTimetable", "View Timetable");
+        showTimetableData = createPostBack(this.getDocument(), showTimetableData);
 
-            this.setDocument(res.parse());
+        res = Jsoup
+                .connect(buildUrl(SCHEDULE_DEFAULT_PATH, academicYear))
+                .userAgent(USER_AGENT)
+                .data(showTimetableData)
+                .followRedirects(true)
+                .method(Connection.Method.POST)
+                .cookies(this.currentCookies)
+                .execute();
 
-            // add login data to standard .NET post back data.
-            Map<String, String> loginData = new HashMap<String, String>();
-            loginData.put("tUserName", this.getUserScheduleDetail().getUsername());
-            loginData.put("tPassword", this.getUserScheduleDetail().getPassword());
-            loginData.put("bLogin", "Login");
-            loginData = createPostBack(this.getDocument(), loginData);
+        this.setDocument(res.parse());
+    }
 
-            // submit post request with formulated data.
-             res = Jsoup
-                     .connect(buildUrl(SCHEDULE_LOGIN_PATH, academicYear))
-                     .userAgent(USER_AGENT)
-                     .data(loginData)
-                     .method(Connection.Method.POST)
-                     .execute();
+    /**
+     * Change the type of timetable display to use list timetables as this is easier to parse.
+     * @throws IOException
+     */
+    private void changeTypeOfReport() throws IOException {
+        Connection.Response res;
+        Map<String, String> timetableDlTypeData = new HashMap<String, String>();
+        timetableDlTypeData.put("__EVENTTARGET", "dlType");
+        timetableDlTypeData = createPostBack(this.getDocument(), timetableDlTypeData);
 
-            this.setDocument(res.parse());
-            this.currentCookies = res.cookies();
-
-            // add schedule system area selection data to .NET post back data.
-            Map<String, String> timetableSelectionData = new HashMap<String, String>();
-            timetableSelectionData.put("__EVENTTARGET", "LinkBtn_mystudentsettimetable");
-            timetableSelectionData = createPostBack(this.getDocument(), timetableSelectionData);
-
-            // send data and change view
-            res = Jsoup
-                    .connect(buildUrl(SCHEDULE_DEFAULT_PATH, academicYear))
-                    .userAgent(USER_AGENT)
-                    .data(timetableSelectionData)
-                    .method(Connection.Method.POST)
-                    .cookies(this.currentCookies)
-                    .execute();
-
-            this.setDocument(res.parse());
-
-
-            Map<String, String> timetableDlTypeData = new HashMap<String, String>();
-            timetableDlTypeData.put("__EVENTTARGET", "dlType");
-            timetableDlTypeData = createPostBack(this.getDocument(), timetableDlTypeData);
-
-            res = Jsoup
-                    .connect(buildUrl(SCHEDULE_DEFAULT_PATH, academicYear))
-                    .userAgent(USER_AGENT)
-                    .data(timetableDlTypeData)
-                    .method(Connection.Method.POST)
-                    .followRedirects(true)
-                    .cookies(this.currentCookies)
-                    .execute();
+        res = Jsoup
+                .connect(buildUrl(SCHEDULE_DEFAULT_PATH, academicYear))
+                .userAgent(USER_AGENT)
+                .data(timetableDlTypeData)
+                .method(Connection.Method.POST)
+                .followRedirects(true)
+                .cookies(this.currentCookies)
+                .execute();
 
 
-            this.setDocument(res.parse());
+        this.setDocument(res.parse());
+    }
 
-            Map<String, String> showTimetableData = new HashMap<String, String>();
-            showTimetableData.put("tLinkType", "mystudentsettimetable");
-            showTimetableData.put("tUser", this.getUserScheduleDetail().getUsername());
-            showTimetableData.put("lbWeeks", this.getUserScheduleDetail().getWeekNumber());
-            showTimetableData.put("dlPeriod", "1-24");
-            showTimetableData.put("dlType", "TextSpreadsheet;swsurl;SWSCUST Object TextSpreadsheet");
-            showTimetableData.put("bGetTimetable", "View Timetable");
-            showTimetableData = createPostBack(this.getDocument(), showTimetableData);
+    private void navigateToTimetableSelection() throws IOException {
+        Connection.Response res;// add schedule system area selection data to .NET post back data.
+        Map<String, String> timetableSelectionData = new HashMap<String, String>();
+        timetableSelectionData.put("__EVENTTARGET", "LinkBtn_mystudentsettimetable");
+        timetableSelectionData = createPostBack(this.getDocument(), timetableSelectionData);
 
-            res = Jsoup
-                    .connect(buildUrl(SCHEDULE_DEFAULT_PATH, academicYear))
-                    .userAgent(USER_AGENT)
-                    .data(showTimetableData)
-                    .followRedirects(true)
-                    .method(Connection.Method.POST)
-                    .cookies(this.currentCookies)
-                    .execute();
+        // send data and change view
+        res = Jsoup
+                .connect(buildUrl(SCHEDULE_DEFAULT_PATH, academicYear))
+                .userAgent(USER_AGENT)
+                .data(timetableSelectionData)
+                .method(Connection.Method.POST)
+                .cookies(this.currentCookies)
+                .execute();
 
-            this.setDocument(res.parse());
+        this.setDocument(res.parse());
+    }
 
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void login() throws Exception {
+        Connection.Response res;// add login data to standard .NET post back data.
+        Map<String, String> loginData = new HashMap<String, String>();
+        loginData.put("tUserName", this.getUserScheduleDetail().getUsername());
+        loginData.put("tPassword", this.getUserScheduleDetail().getPassword());
+        loginData.put("bLogin", "Login");
+        loginData = createPostBack(this.getDocument(), loginData);
+
+        // submit post request with formulated data.
+        res = Jsoup
+                .connect(buildUrl(SCHEDULE_LOGIN_PATH, academicYear))
+                .userAgent(USER_AGENT)
+                .data(loginData)
+                .method(Connection.Method.POST)
+                .execute();
+
+        this.setDocument(res.parse());
+        Elements errorMessageElements = this.document.getElementsByClass("ErrorMessage");
+        if(errorMessageElements.size() > 0) {
+            StringBuilder stringBuilder = new StringBuilder("Error during login: \n");
+            for(Element messageElement: errorMessageElements) {
+                stringBuilder.append(messageElement.text()).append("\n");
+            }
+            throw new Exception(stringBuilder.toString());
         }
+        this.currentCookies = res.cookies();
+    }
 
+    private void openLoginPage() throws IOException {
+        Connection.Response res;// retrieve DOM  so we can extract post back fields.
+        res = Jsoup
+                .connect(buildUrl(SCHEDULE_LOGIN_PATH, academicYear))
+                .userAgent(USER_AGENT)
+                .method(Connection.Method.GET)
+                .execute();
+
+        this.setDocument(res.parse());
     }
 
     /**
