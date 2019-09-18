@@ -1,5 +1,8 @@
 package com.dominiccobo.weekscheduler.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,6 +15,8 @@ import java.util.List;
  * @author Dominic Cobo (contact@dominiccobo.com)
  */
 public class ICSBuilderService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ICSBuilderService.class);
 
     /**
      * List of events formatted to the ICS standard. See RFC on IETF.
@@ -58,8 +63,6 @@ public class ICSBuilderService {
      */
     public void buildToICSFile(String directory) {
 
-        directory += "out.ics";
-
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(directory));
             writer.write(this.getICSOutput());
@@ -68,7 +71,7 @@ public class ICSBuilderService {
         } catch (IOException e) {
             throw new IllegalArgumentException("There was an issue with the provided directory");
         }
-        System.out.println("Successfully written " + icsFormattedEvents.size() + " events to " + directory);
+        LOGGER.info("Successfully written {} events to {}", icsFormattedEvents.size(), directory);
     }
 
     /**

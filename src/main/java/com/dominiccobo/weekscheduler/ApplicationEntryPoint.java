@@ -1,11 +1,8 @@
 package com.dominiccobo.weekscheduler;
 
 import com.dominiccobo.weekscheduler.domain.AcademicYear;
-import com.dominiccobo.weekscheduler.domain.ScheduleEvent;
+import com.dominiccobo.weekscheduler.domain.Schedule;
 import com.dominiccobo.weekscheduler.domain.UserScheduleDetail;
-import com.dominiccobo.weekscheduler.services.ICSBuilderService;
-import com.dominiccobo.weekscheduler.services.ScheduleBrowserAutomationService;
-import com.dominiccobo.weekscheduler.services.ScheduleScraperService;
 
 /**
  * Application Entry Point
@@ -62,32 +59,11 @@ public class ApplicationEntryPoint {
         // TODO: implement cross-platform directory validation.
         final String output = System.console().readLine("Output Directory: ");
         userScheduleDetail.setOutputDir(output);
+        download(userScheduleDetail);
+    }
 
-
-        // automate the navigation to the timetable element
-        ScheduleBrowserAutomationService browserAutomation = new ScheduleBrowserAutomationService(
-                userScheduleDetail,
-                new AcademicYear(19, 20)
-        );
-
-        // parse all contents...
-        ScheduleScraperService scheduleScraperService = new ScheduleScraperService(
-                browserAutomation.getDocument()
-        );
-
-        ICSBuilderService icsBuilderService = new ICSBuilderService();
-
-        for(ScheduleEvent event: scheduleScraperService.getResult()) {
-            icsBuilderService.addEntry(event.toICSFormat());
-        }
-
-        try {
-            icsBuilderService.buildToICSFile(userScheduleDetail.getOutputDir());
-        }
-        catch (IllegalArgumentException e) {
-            System.err.println(e.getMessage());
-        }
-
-
+    private static void download(UserScheduleDetail userScheduleDetail) throws Exception {
+        Schedule schedule = new Schedule(new AcademicYear(19, 20), userScheduleDetail);
+        schedule.retrieve();
     }
 }

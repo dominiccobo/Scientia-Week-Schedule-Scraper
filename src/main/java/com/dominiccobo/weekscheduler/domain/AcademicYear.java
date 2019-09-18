@@ -19,6 +19,6 @@ public class AcademicYear {
 
     @Override
     public String toString() {
-        return String.format("Starting: %d\nEnding %d", this.start, this.end);
+        return String.format("Starting: %d, Ending %d", this.start, this.end);
     }
 }
