@@ -100,7 +100,7 @@ public class UserScheduleDetail {
             Integer numericRepresentation = Integer.valueOf(weekNumber);
 
             if(numericRepresentation >= 1 && numericRepresentation <= 52) {
-                this.weekNumber = weekNumber;
+                this.weekNumber = " " + weekNumber; // for some reason the values are only accepted with a prepended space...
                 return;
             }
             throw new IllegalArgumentException("Numeric inputs must be greater than 0 or less than 53");
