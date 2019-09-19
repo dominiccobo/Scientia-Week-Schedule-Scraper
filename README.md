@@ -5,7 +5,7 @@ My second crude implementation of the timetable scraper, which does not require 
 
 ### Build Instructions.
 
-Run the build.sh script to build the project (should build the project using maven)
+Run ./gradlew build to build using the provided wrapper.
 
 ### Running Instructions
 
