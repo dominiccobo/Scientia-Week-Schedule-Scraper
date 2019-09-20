@@ -1,5 +1,7 @@
 package com.dominiccobo.weekscheduler.domain;
 
+import java.time.LocalDateTime;
+
 /**
  * Represents an acedemic year, as a new URL is created for each academic year the timetable is used.
  */
@@ -20,5 +22,14 @@ public class AcademicYear {
     @Override
     public String toString() {
         return String.format("Starting: %d, Ending %d", this.start, this.end);
+    }
+
+    public static AcademicYear getCurrentAcademicYear() {
+        AcademicYear academicYear;
+        LocalDateTime now = LocalDateTime.now();
+        String lastTwoDigitsOfStartingYearAsString = Integer.toString(now.getYear()).substring(2);
+        Integer startingYear = new Integer(lastTwoDigitsOfStartingYearAsString);
+        academicYear = new AcademicYear(startingYear, ++startingYear);
+        return academicYear;
     }
 }
