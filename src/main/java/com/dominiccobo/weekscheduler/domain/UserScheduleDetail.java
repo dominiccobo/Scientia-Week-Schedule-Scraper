@@ -36,30 +36,19 @@ public class UserScheduleDetail {
 
 
     /**
-     * Constrained setter for username field. Verifies validity of input.
+     *
      * @param username the username value to set.
      */
     public void setUsername(String username) {
-
-        if(username != null && username.length() > 5) {
             this.username = username;
-            return;
-        }
-        throw new IllegalArgumentException("Username must be at least 5 characters long.");
-
     }
 
     /**
-     * Constrained setter for password field. Verifies validity of input.
+     *
      * @param password the password value to set.
      */
     public void setPassword(String password) {
-        if(password != null && password.length() > 5) {
-            this.password = password;
-            return;
-        }
-        throw new IllegalArgumentException("Password must be greater than 5 characters.");
-
+        this.password = password;
     }
 
     /**
