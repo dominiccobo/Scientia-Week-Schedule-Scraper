@@ -1,3 +1,5 @@
+Warning: This code is no longer active maintained. Its functionality can no longer be guaranteed. Forks are welcome if you find this useful. 
+
 # Scientia Week Scheduler for Brunel Unversity
 
 My second crude implementation of the timetable scraper, which does not require the usage of a specific browser. 
